@@ -1261,6 +1261,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     restoreFooterStatusRepaintHook?.();
     restoreFooterStatusRepaintHook = null;
     teardownFixedEditorCompositor({ resetExtendedKeyboardModes: true });
+    restoreCursorBelowInlineEditor();
     stashShortcutInputUnsubscribe?.();
     stashShortcutInputUnsubscribe = null;
     shellSession?.dispose();
@@ -2260,7 +2261,18 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     fixedWidgetContainerAbove = null;
     fixedWidgetContainerBelow = null;
   }
+  
+  function restoreCursorBelowInlineEditor(): void {
+    if (fixedEditorCompositor || !tuiRef?.terminal || config.fixedEditor) return;
 
+    const rows = Math.max(1, Number(tuiRef.terminal.rows) || 1);
+    try {
+      process.stdout.write(`\x1b[0m\x1b[r\x1b[${rows};1H\n`);
+    } catch {
+      // Shutdown cleanup cannot surface useful terminal write failures.
+    }
+  }
+  
   function findContainerWithChild(tui: any, child: any): { container: any; index: number } | null {
     const children = Array.isArray(tui?.children) ? tui.children : [];
     const index = children.findIndex((candidate: any) => Array.isArray(candidate?.children) && candidate.children.includes(child));
