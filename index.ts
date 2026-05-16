@@ -2266,12 +2266,16 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     if (fixedEditorCompositor || !tuiRef?.terminal || config.fixedEditor) return;
 
     const rows = Math.max(1, Number(tuiRef.terminal.rows) || 1);
+    const cursorRow = typeof tuiRef.cursorRow === "number" ? tuiRef.cursorRow : rows - 1;
+    const viewportTop = typeof tuiRef.previousViewportTop === "number" ? tuiRef.previousViewportTop : 0;
+    const screenRow = Math.max(1, Math.min(rows, cursorRow - viewportTop + 1));
     try {
-      process.stdout.write(`\x1b[0m\x1b[r\x1b[${rows};1H\n`);
+      process.stdout.write(`\x1b[0m\x1b[r\x1b[${screenRow};1H\n`);
     } catch {
       // Shutdown cleanup cannot surface useful terminal write failures.
     }
   }
+
   
   function findContainerWithChild(tui: any, child: any): { container: any; index: number } | null {
     const children = Array.isArray(tui?.children) ? tui.children : [];
