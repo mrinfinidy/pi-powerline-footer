@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-05-26
+
+### Fixed
+- **Fixed-editor mouse scrolling** — Reasserted terminal mouse reporting after fixed-editor writes so mouse-wheel scrolling keeps working when the fixed editor is enabled.
+- **Fixed-editor chat clipping** — Guarded fixed-editor viewport writes against terminal autowrap drift so full-width user message boxes no longer lose characters at the right edge.
+
+## [0.5.5] - 2026-05-26
+
+### Fixed
+- **Pi 0.75 extension installs** — Widened Pi package peer dependency ranges so `pi-powerline-footer` can install alongside extensions that require Pi 0.75.x packages.
+
 ## [0.5.4] - 2026-05-10
 
 ### Fixed
