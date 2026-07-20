@@ -47,8 +47,10 @@ const modelSegment: StatusLineSegment = {
     const opts = ctx.options.model ?? {};
 
     let modelName = ctx.model?.name || ctx.model?.id || "no-model";
-    // Strip "Claude " prefix for brevity
-    if (modelName.startsWith("Claude ")) {
+    if (opts.display === "qualified" && ctx.model?.id) {
+      const provider = ctx.model.provider || ctx.model.providerId || ctx.model.providerName;
+      modelName = provider && !ctx.model.id.includes("/") ? `${provider}/${ctx.model.id}` : ctx.model.id;
+    } else if (modelName.startsWith("Claude ")) {
       modelName = modelName.slice(7);
     }
 
@@ -193,7 +195,7 @@ const thinkingSegment: StatusLineSegment = {
     const label = levelText[level] || level;
     const content = `think:${label}`;
 
-    if (level === "high" || level === "xhigh") {
+    if (level === "high" || level === "xhigh" || level === "max") {
       return { content: rainbow(content), visible: true };
     }
 
@@ -268,8 +270,22 @@ const costSegment: StatusLineSegment = {
       return { content: "", visible: false };
     }
 
-    const costDisplay = usingSubscription ? "(sub)" : `$${cost.toFixed(2)}`;
-    return { content: color(ctx, "cost", costDisplay), visible: true };
+    const reportedCost = cost > 0 ? `$${cost.toFixed(2)}` : null;
+    if (!usingSubscription) {
+      return reportedCost
+        ? { content: color(ctx, "cost", reportedCost), visible: true }
+        : { content: "", visible: false };
+    }
+
+    const subscriptionDisplay = ctx.options.cost?.subscriptionDisplay ?? "subscription";
+    if (subscriptionDisplay === "reported-cost" && reportedCost) {
+      return { content: color(ctx, "cost", reportedCost), visible: true };
+    }
+    if (subscriptionDisplay === "both" && reportedCost) {
+      return { content: color(ctx, "cost", `${reportedCost} (sub)`), visible: true };
+    }
+
+    return { content: color(ctx, "cost", "(sub)"), visible: true };
   },
 };
 
@@ -279,17 +295,16 @@ const contextPctSegment: StatusLineSegment = {
     if (ctx.customCompactionEnabled) return { content: "", visible: false };
 
     const icons = getIcons();
-    const pct = ctx.contextPercent;
-    const window = ctx.contextWindow;
+    const { contextTokens, contextPercent, contextWindow } = ctx;
 
     const autoIcon = ctx.autoCompactEnabled && icons.auto ? ` ${icons.auto}` : "";
-    const text = `${pct.toFixed(1)}%/${formatTokens(window)}${autoIcon}`;
+    const text = `${formatTokens(contextTokens)}/${formatTokens(contextWindow)} (${contextPercent.toFixed(1)}%)${autoIcon}`;
 
     // Icon outside color, text inside - use semantic colors for thresholds
     let content: string;
-    if (pct > 90) {
+    if (contextPercent > 90) {
       content = withIcon(icons.context, color(ctx, "contextError", text));
-    } else if (pct > 70) {
+    } else if (contextPercent > 70) {
       content = withIcon(icons.context, color(ctx, "contextWarn", text));
     } else {
       content = withIcon(icons.context, color(ctx, "context", text));

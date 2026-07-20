@@ -2,6 +2,63 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-14
+
+### Added
+- **Fixed-editor scroll-away shortcut hint card** — Shows a stacked bottom/user/assistant shortcut card when chat is scrolled away from the bottom; clicking anywhere in the card jumps back to the bottom when fixed-editor mouse handling is enabled.
+- **Welcome toggle** — Added `powerline.welcome` so the startup welcome UI can be disabled without disabling the footer. Thanks to OCPdev25, miloslavnosek, vzeazy, and Florian Kinder (@fank) for #48/#89.
+- **Display options** — Added `powerline.cost.subscriptionDisplay` and `powerline.model.display` for subscription cost and provider-qualified model names. Thanks to Alexandr Burdiyan (@burdiyan), Meidhy (@dymayday), Mathu Mounasamy (@Mathuv), and pserey for #3/#83/#50.
+- **Legacy sharp-S stash opt-in** — Added `powerline.stashSharpSShortcut` for users who intentionally want printable `ß` to trigger stash. Thanks to SebastianRuettiRuettger and Filip (@filipores) for #39/#84.
+- **Contribution guide** — Added lightweight bug report, feature request, PR, testing, docs, and changelog guidance. Thanks to OCPdev25 for #49.
+- **Agent-dir path support** — Respects `PI_CODING_AGENT_DIR` for global powerline settings, stash history, sessions, vibes, skills, commands, and extension discovery. Thanks to Hrand Liu (@IstPlayer) for #86.
+- **Segment disabling** — Added `powerline.disabledSegments` to hide built-in or configured custom segments from any preset. Thanks to Brian Lange (@bjlange) for #88.
+- **Startup token estimate** — The welcome UI now shows an approximate initial system-prompt token count before the first message. Thanks to Ibrahim Mohammed (@IbrahimMohammed47) for #80.
+- **Configurable segment layout** — Added `powerline.layout` for exact `left`, `right`, and `secondary` group overrides on any preset, including explicit `custom:<id>` placement. This replaces the misleading fixed `custom` preset. Thanks to Bruno Orsolon (@brunoorsolon), Thurston Sandberg (@thurstonsand), and Arthur Bodera (@Thinkscape) for #54/#40/#37.
+- **Primary row placement** — Added `powerline.placement` and `/powerline placement above|below|toggle` to move the primary powerline row around the editor while keeping notifications and responsive overflow in their existing groups. Thanks to Rogerio Saulo (@rsaulo) for #77.
+
+### Changed
+- **Herdr and tmux scroll guidance** — Keeps fixed-editor mouse scrolling enabled by default and documents that host multiplexer scrollback needs `/powerline fixed-editor off`.
+- **Bottom jump shortcut** — Uses `ctrl+alt+g` as the default fixed-editor jump-to-bottom shortcut instead of `ctrl+shift+g`.
+- **Stash shortcut safety** — Literal `ß` is no longer consumed as stash by default; unambiguous Alt/Meta-S escape encodings still work.
+- **Docs for UI and demo settings** — Clarified that the README screenshot is illustrative, documented a current footer setup, noted the old chrome limitation, and documented the URL modifier-click mouse-capture limitation plus Shift bypass. Thanks to Yosof Badr (@yosofbadr), kaiwah, Jason (@itguy327), Oliver Mannion (@tekumara), thurstonsand, jmd1011, and Thomas Dietert (@tdietert) for #75/#63/#45/#93/#95.
+- **Pi 0.80 compatibility** — Widened peer ranges and refreshed dev dependencies against `@earendil-works/*` 0.80.3. Thanks to Alexander Gerdes (@Avg8888) and AlexKucera for #87.
+- **Shortcut disabling** — `powerlineShortcuts` and `bashMode.toggleShortcut` now treat `null` or `""` as explicit disabled values and omit disabled chat jumps from fixed-editor hints. Thanks to Koen De Jaeger (@kdejaeger) for #73.
+- **Editor autocomplete composition** — Powerline now passes Pi's autocomplete provider through a previous editor's `setAutocompleteProvider()` before adding bash-mode wrappers, preserving prior autocomplete-provider wrappers where possible. Thanks to Tifan Dwi Avianto (@tifandotme) for #61.
+- **Context usage display** — The context segment now shows used tokens, maximum tokens, and percentage together. Thanks to Fayi Femi-Balogun (@fayimora) for #92.
+- **Maximum thinking style** — Pi's `max` thinking level now uses the same rainbow treatment as `high` and `xhigh`. Thanks to @AiraNadih for #94.
+
+### Fixed
+- **Fixed-editor wheel bursts** — Coalesces rapid mouse-wheel packets into throttled viewport repaints and defers the follow-up TUI render until scrolling settles, reducing flicker and slowdowns in terminal multiplexers.
+- **Welcome discovery noise** — Ignored vanished/dangling skill, extension, and prompt-template entries during welcome overlay discovery instead of printing stack traces.
+- **Reload keyboard protocol** — Preserves extended keyboard modes on `/reload` and only hard-resets them on real quit. Thanks to Francesco Buldo (@frabul), Alexander Gerdes (@Avg8888), and Sylvain Rivierre (@slhad) for #81/#82/#85.
+- **Prompt history recall** — Up-arrow prompt history no longer clobbers multiline drafts from the last logical line. Thanks to Nelson Tam (@nelson) and ceblan for #79.
+- **Stale extension contexts** — Handles both old and new Pi stale-context messages and guards late `agent_end` UI access without swallowing unrelated errors. Thanks to JackIce (@jackice) and Salem Sayed Abdel Gawad (@salemsayed) for #62, and Joshua Brunner (@joshuajbrunner), Arthur Bodera (@Thinkscape), @k0valik, and ET (@EdrisT) for #33.
+- **Context icon glyph** — Switched the Nerd Font context icon to a stable v3-friendly database glyph. Thanks to Michael Leonard (@LeonardMH) for #41.
+- **Recent session names** — Recent-session project names now prefer the session JSONL header `cwd` basename before falling back to encoded directory names. Thanks to Jon Leemon (@nomeelnoj) for #76.
+- **Quit cursor restore** — When fixed-editor mode is off, quitting now moves the terminal cursor below Pi's inline editor area without running on `/reload` or session switches. Thanks to afkdev8 (@mrinfinidy) for #60.
+- **Custom cursor bindings** — Prompt-history recall now intercepts only literal Up/Down arrows, so custom cursor bindings such as `alt+j` and `alt+k` reach normal editor movement. Thanks to Hrand Liu (@IstPlayer) for #96.
+
+## [0.6.1] - 2026-06-08
+
+### Fixed
+- **Prompt history draft preservation** — Returning from prompt-history browsing with Down now restores the unsent editor draft instead of clearing it.
+
+## [0.6.0] - 2026-06-05
+
+### Changed
+- **Prompt history recall** — Pressing Up at the end of non-bash editor text now recalls the previous submitted prompt, while Up inside the text keeps normal cursor movement.
+- **Pi 0.76 compatibility** — Verified compatibility against `@earendil-works/pi-ai`, `@earendil-works/pi-coding-agent`, and `@earendil-works/pi-tui` `0.76.0`, then widened peer/dev ranges to `>=0.74.0 <0.77.0`.
+- **Git polling control** — Added `powerline.git.polling` with `full`, `branch`, and `off` modes so users can avoid background dirty-state polling in worktrees or Windows environments.
+
+### Fixed
+- **Session-switch keyboard modes** — Preserved Kitty keyboard protocol and `modifyOtherKeys` across session switches so Shift+Enter keeps inserting newlines after resume/new/fork.
+- **Fixed-editor IME positioning** — Kept the terminal cursor anchored to the logical editor cursor even when the visible hardware cursor is hidden, improving IME candidate placement.
+- **Fixed-editor image scrolling** — Cleared stale Kitty image placements when the app-owned chat viewport moves so images scroll with text.
+- **Stale extension contexts** — Ignored only Pi's stale-context render race during session replacement while preserving other render errors.
+- **Stash text lookup** — Fell back to Pi's editor text when the custom editor temporarily reports an empty string, so stash/copy/history actions can still see current input.
+- **Segment option config** — Parsed and merged documented segment options like `powerline.path.mode` over preset defaults.
+- **Fixed-editor selection hit-testing** — Refreshed root viewport state before mouse selection hit-testing so copied text stays aligned after output changes.
+
 ## [0.5.6] - 2026-05-26
 
 ### Fixed

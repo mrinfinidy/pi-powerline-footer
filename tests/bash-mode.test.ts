@@ -876,6 +876,102 @@ test("bash editor shell history state does not clobber the base prompt history i
   }
 });
 
+test("bash editor recalls prompt history from single-line end without losing the live draft", async () => {
+  const links = ensureEditorModuleLinks();
+
+  try {
+    const { BashModeEditor } = await import("../bash-mode/editor.ts");
+    const { KeybindingsManager } = await import(new URL("../node_modules/@earendil-works/pi-coding-agent/dist/core/keybindings.js", import.meta.url).href);
+    const keybindings = KeybindingsManager.create();
+    const createEditor = () => new BashModeEditor(
+      { requestRender() {}, terminal: { columns: 80, rows: 24 } },
+      {},
+      keybindings,
+      {
+        keybindings,
+        isBashModeActive: () => false,
+        isShellRunning: () => false,
+        onExitBashMode() {},
+        onSubmitCommand() {},
+        onInterrupt() {},
+        onNotify() {},
+        getHistoryEntries: () => [],
+        resolveGhostSuggestion: async () => null,
+      },
+    );
+
+    const editor = createEditor();
+    editor.addToHistory("older prompt");
+    editor.addToHistory("previous prompt");
+    editor.setText("draft");
+
+    editor.handleInput("\x1b[A");
+    assert.equal(editor.getText(), "previous prompt");
+
+    editor.handleInput("\x1b[A");
+    assert.equal(editor.getText(), "older prompt");
+
+    editor.handleInput("\x1b[B");
+    assert.equal(editor.getText(), "previous prompt");
+
+    editor.handleInput("\x1b[B");
+    assert.equal(editor.getText(), "draft");
+
+    const midLineEditor = createEditor();
+    midLineEditor.addToHistory("previous prompt");
+    midLineEditor.setText("draft");
+    midLineEditor.handleInput("\x1b[D");
+    midLineEditor.handleInput("\x1b[A");
+
+    assert.equal(midLineEditor.getText(), "draft");
+
+    const multilineEditor = createEditor();
+    multilineEditor.addToHistory("previous prompt");
+    multilineEditor.setText("first line\nsecond line");
+    multilineEditor.handleInput("\x1b[A");
+
+    assert.equal(multilineEditor.getText(), "first line\nsecond line");
+    assert.equal(Reflect.get(multilineEditor, "historyIndex"), -1);
+
+    const firstLineEditor = createEditor();
+    firstLineEditor.addToHistory("previous prompt");
+    firstLineEditor.setText("first line\nsecond line");
+    Reflect.set(Reflect.get(firstLineEditor, "state"), "cursorLine", 0);
+    Reflect.set(Reflect.get(firstLineEditor, "state"), "cursorCol", 0);
+    firstLineEditor.handleInput("\x1b[A");
+
+    assert.equal(firstLineEditor.getText(), "previous prompt");
+
+    const customKeybindings = new KeybindingsManager({
+      "tui.editor.cursorUp": ["up", "alt+k"],
+    });
+    const customBindingEditor = new BashModeEditor(
+      { requestRender() {}, terminal: { columns: 80, rows: 24 } },
+      {},
+      customKeybindings,
+      {
+        keybindings: customKeybindings,
+        isBashModeActive: () => false,
+        isShellRunning: () => false,
+        onExitBashMode() {},
+        onSubmitCommand() {},
+        onInterrupt() {},
+        onNotify() {},
+        getHistoryEntries: () => [],
+        resolveGhostSuggestion: async () => null,
+      },
+    );
+    customBindingEditor.addToHistory("previous prompt");
+    customBindingEditor.setText("draft");
+    customBindingEditor.handleInput("\x1bk");
+
+    assert.equal(customBindingEditor.getText(), "draft");
+    assert.equal(Reflect.get(customBindingEditor, "historyIndex"), -1);
+  } finally {
+    links.cleanup();
+  }
+});
+
 test("bash editor escape exits bash mode", async () => {
   const links = ensureEditorModuleLinks();
 
